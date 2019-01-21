@@ -163,6 +163,10 @@ gnutls_certificate_set_x509_key_file = libgnutls.gnutls_certificate_set_x509_key
 gnutls_certificate_set_x509_key_file.argtypes = [gnutls_certificate_credentials_t, c_char_p, c_char_p, gnutls_x509_crt_fmt_t]
 gnutls_certificate_set_x509_key_file.restype = c_int
 
+gnutls_certificate_set_x509_key_file2 = libgnutls.gnutls_certificate_set_x509_key_file2
+gnutls_certificate_set_x509_key_file2.argtypes = [gnutls_certificate_credentials_t, c_char_p, c_char_p, gnutls_x509_crt_fmt_t, c_char_p, c_uint]
+gnutls_certificate_set_x509_key_file2.restype = c_int
+
 gnutls_certificate_set_x509_key_mem = libgnutls.gnutls_certificate_set_x509_key_mem
 gnutls_certificate_set_x509_key_mem.argtypes = [gnutls_certificate_credentials_t, POINTER(gnutls_datum_t), POINTER(gnutls_datum_t), gnutls_x509_crt_fmt_t]
 gnutls_certificate_set_x509_key_mem.restype = c_int
