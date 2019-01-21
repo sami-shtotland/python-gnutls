@@ -67,6 +67,49 @@ class _ServerNameIdentities(dict):
         return default
 
 
+class X509TPM(object):
+    def __new__(cls, *args, **kwargs):
+        c_object = gnutls_certificate_credentials_t()
+        gnutls_certificate_allocate_credentials(byref(c_object))
+        instance = object.__new__(cls)
+        instance.__deinit = gnutls_certificate_free_credentials
+        instance._c_object = c_object
+        return instance
+
+    def __init__(self, cert=None, key=None, types=None, password=None, trusted=[]):
+        self.tpm_load = gnutls_certificate_set_x509_key_file2(self._c_object, c_char_p(cert), c_char_p(key), types, c_char_p(password), c_uint())
+        self._cert = cert
+        self._key = key
+        self._type = CRED_CERTIFICATE
+        self._trusted = ()
+        self.crl_list = []
+        self.add_trusted(trusted)
+
+    @method_args(list_of(X509Certificate))
+    def add_trusted(self, trusted):
+        size = len(trusted)
+        if size > 0:
+            ca_list = (gnutls_x509_crt_t * size)(*[cert._c_object for cert in trusted])
+            gnutls_certificate_set_x509_trust(self._c_object, cast(byref(ca_list), POINTER(gnutls_x509_crt_t)), size)
+            self._trusted = self._trusted + tuple(trusted)
+
+    def check_certificate(self, cert, cert_name='certificate'):
+        """Verify activation, expiration and revocation for the given certificate"""
+        now = time()
+        if cert.activation_time > now:
+            raise CertificateExpiredError("%s is not yet activated" % cert_name)
+        if cert.expiration_time < now:
+            raise CertificateExpiredError("%s has expired" % cert_name)
+        for crl in self.crl_list:
+            crl.check_revocation(cert, cert_name=cert_name)
+
+    def check_tpm_load(self):
+        """Check if the TPM loaded successfully"""
+        if self.tpm_load < 0:
+            return False
+        return True
+
+
 class X509Credentials(object):
     def __new__(cls, *args, **kwargs):
         c_object = gnutls_certificate_credentials_t()
