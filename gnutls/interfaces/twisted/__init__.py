@@ -1,7 +1,7 @@
 
 """GNUTLS Twisted interface"""
 
-__all__ = ['X509Credentials', 'TLSContext', 'connectTLS', 'listenTLS']
+__all__ = ['X509Credentials', 'TLSContext', 'connectTLS', 'listenTLS', 'X509TPM']
 
 from time import time
 
@@ -12,6 +12,7 @@ from zope.interface import implementsOnly, implementedBy
 
 from gnutls.connection import ClientSession, ServerSession, ServerSessionFactory
 from gnutls.connection import TLSContext, X509Credentials as _X509Credentials
+from gnutls.connection import X509TPM as _X509TPM
 from gnutls.constants import SHUT_RDWR, SHUT_WR
 from gnutls.errors import *
 
@@ -55,6 +56,18 @@ class RecurrentCall(object):
 class CertificateOK: pass
 
 class X509Credentials(_X509Credentials):
+    """A Twisted enhanced X509Credentials"""
+    verify_peer = False
+    verify_period = None
+
+    def verify_callback(self, peer_cert, preverify_status=None):
+        """Verifies the peer certificate and raises an exception if it cannot be accepted"""
+        if isinstance(preverify_status, Exception):
+            raise preverify_status
+        self.check_certificate(peer_cert, cert_name='peer certificate')
+
+
+class X509TPM(_X509TPM):
     """A Twisted enhanced X509Credentials"""
     verify_peer = False
     verify_period = None
